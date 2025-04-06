@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>INST377 - Lab 6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .marker-info {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>INST377 - Lab 6</h1>
+  <div id="map"></div>
+
+  <div id="marker-info">
+    <div class="marker-info" id="marker1">Marker 1: Loading...</div>
+    <div class="marker-info" id="marker2">Marker 2: Loading...</div>
+    <div class="marker-info" id="marker3">Marker 3: Loading...</div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // 1. Create Leaflet map centered on US
+    const map = L.map('map').setView([32.5, -95], 5); // Center between 30-35 N, 90-100 W
+
+    // 2. Add base map layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 3. Random coordinate generator
+    function getRandomInRange(from, to, fixed) {
+      return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
+    }
+
+    // 4. Generate 3 random coordinates
+    const coordinates = Array.from({ length: 3 }, () => ({
+      lat: getRandomInRange(30, 35, 3),
+      lng: getRandomInRange(-90, -100, 3)
+    }));
+
+    // 5. Place markers and get locality info
+    coordinates.forEach((coord, index) => {
+      const marker = L.marker([coord.lat, coord.lng]).addTo(map);
+      const markerId = `marker${index + 1}`;
+      const markerDiv = document.getElementById(markerId);
+      markerDiv.innerHTML = `Marker ${index + 1}: (${coord.lat}, ${coord.lng})<br>Locality: Loading...`;
+
+      fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coord.lat}&longitude=${coord.lng}&localityLanguage=en`)
+        .then(response => response.json())
+        .then(data => {
+          markerDiv.innerHTML = `Marker ${index + 1}: (${coord.lat}, ${coord.lng})<br>Locality: ${data.locality || 'Not found'}`;
+        })
+        .catch(error => {
+          console.error(error);
+          markerDiv.innerHTML += `<br>Error retrieving locality`;
+        });
+    });
+  </script>
+
+</body>
+</html>

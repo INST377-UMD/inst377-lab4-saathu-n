@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lab 7 - Book Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #container {
+      border: 2px solid black;
+      width: 500px;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 250px;
+      padding: 5px;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 6px 10px;
+      margin-left: 10px;
+    }
+
+    #loading {
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <h1>Let's Lookup some Books</h1>
+
+    <form id="bookForm">
+      <label for="bookInput">Please enter a book name:</label><br>
+      <input type="text" id="bookInput" placeholder="e.g., Lord of the Rings" required />
+      <button type="submit">Search</button>
+    </form>
+
+    <p id="loading" style="display: none;">Please wait while we load the books</p>
+
+    <table id="resultsTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('bookForm');
+    const input = document.getElementById('bookInput');
+    const loading = document.getElementById('loading');
+    const resultsTable = document.getElementById('resultsTable');
+    const resultsBody = document.getElementById('resultsBody');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      // Reset state
+      loading.style.display = 'block';
+      resultsTable.style.display = 'none';
+      resultsBody.innerHTML = '';
+
+      const searchTerm = input.value.trim().replace(/\s+/g, '+');
+      const url = `https://openlibrary.org/search.json?title=${searchTerm}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (data.docs.length > 0) {
+          resultsTable.style.display = 'table';
+
+          data.docs.slice(0, 10).forEach(book => {
+            const row = document.createElement('tr');
+
+            const title = document.createElement('td');
+            title.textContent = book.title || 'N/A';
+
+            const author = document.createElement('td');
+            author.textContent = book.author_name ? book.author_name.join(', ') : 'Unknown';
+
+            row.appendChild(title);
+            row.appendChild(author);
+            resultsBody.appendChild(row);
+          });
+        } else {
+          alert('No results found!');
+        }
+
+      } catch (err) {
+        loading.style.display = 'none';
+        alert('Error fetching book data. Try again later.');
+        console.error(err);
+      }
+    });
+  </script>
+
+</body>
+</html>
+<!-- force commit -->
